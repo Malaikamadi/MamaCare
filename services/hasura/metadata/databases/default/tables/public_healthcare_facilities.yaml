@@ -1,0 +1,410 @@
+table:
+  name: healthcare_facilities
+  schema: public
+
+select_permissions:
+  # All authenticated users can see basic facility info
+  - role: user
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+      filter: {}
+  
+  # Mothers can see all facilities
+  - role: mother
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+      filter: {}
+  
+  # CHWs can see all facilities
+  - role: chw
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+        - created_at
+        - updated_at
+      filter: {}
+      
+  # Clinicians can see all facilities with focus on their own
+  - role: clinician
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+        - capacity
+        - is_active
+        - created_at
+        - updated_at
+      filter: {}
+  
+  # Admins can see everything
+  - role: admin
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+        - capacity
+        - is_active
+        - created_at
+        - updated_at
+      filter: {}
+
+insert_permissions:
+  # Only clinicians and admins can add facilities
+  # Clinicians can only add facilities in their district
+  - role: clinician
+    permission:
+      columns:
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+      check:
+        district: X-Hasura-District
+  
+  # Admins can add any facility
+  - role: admin
+    permission:
+      columns:
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+        - capacity
+        - is_active
+      check: {}
+
+update_permissions:
+  # Clinicians can update their own facility
+  - role: clinician
+    permission:
+      columns:
+        - name
+        - contact_phone
+        - contact_email
+        - operating_hours
+      filter:
+        id: X-Hasura-Facility-Id
+      check: {}
+  
+  # Admins can update any facility
+  - role: admin
+    permission:
+      columns:
+        - name
+        - facility_type
+        - address_line1
+        - address_line2
+        - district
+        - contact_phone
+        - contact_email
+        - operating_hours
+        - location
+        - capacity
+        - is_active
+      filter: {}
+      check: {}
+
+delete_permissions:
+  # Only admins can delete facilities
+  - role: admin
+    permission:
+      filter: {}
+configuration:
+  column_config:
+    address_line1:
+      custom_name: addressLine1
+    address_line2:
+      custom_name: addressLine2
+    contact_email:
+      custom_name: contactEmail
+    contact_phone:
+      custom_name: contactPhone
+    created_at:
+      custom_name: createdAt
+    facility_type:
+      custom_name: facilityType
+    is_active:
+      custom_name: isActive
+    operating_hours:
+      custom_name: operatingHours
+    updated_at:
+      custom_name: updatedAt
+  custom_column_names:
+    address_line1: addressLine1
+    address_line2: addressLine2
+    contact_email: contactEmail
+    contact_phone: contactPhone
+    created_at: createdAt
+    facility_type: facilityType
+    is_active: isActive
+    operating_hours: operatingHours
+    updated_at: updatedAt
+  custom_name: HealthcareFacility
+  custom_root_fields:
+    delete: deleteHealthcareFacilities
+    delete_by_pk: deleteHealthcareFacility
+    insert: insertHealthcareFacilities
+    insert_one: insertHealthcareFacility
+    select: healthcareFacilities
+    select_aggregate: healthcareFacilitiesAggregate
+    select_by_pk: healthcareFacilityById
+    update: updateHealthcareFacilities
+    update_by_pk: updateHealthcareFacility
+array_relationships:
+  - name: ambulances
+    using:
+      foreign_key_constraint_on:
+        column: facility_id
+        table:
+          name: ambulances
+          schema: public
+  - name: staff
+    using:
+      foreign_key_constraint_on:
+        column: facility_id
+        table:
+          name: users
+          schema: public
+  - name: visits
+    using:
+      foreign_key_constraint_on:
+        column: facility_id
+        table:
+          name: visits
+          schema: public
+
+# Role-based permissions for healthcare facilities table
+# Following TypeScript-inspired principles with strict nullability and type checking
+
+# Select permissions - facilities are generally publicly viewable
+select_permissions:
+  # Anonymous users can see limited facility data (no contact details)
+  - role: anonymous
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - is_active
+        - operating_hours
+      filter:
+        is_active:
+          _eq: true
+      allow_aggregations: false
+
+  # Authenticated users can see facility data with contact details
+  - role: user
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - address_line2
+        - contact_phone
+        - contact_email
+        - is_active
+        - operating_hours
+        - created_at
+        - updated_at
+      filter:
+        is_active:
+          _eq: true
+      allow_aggregations: false
+
+  # Mothers can see all facility data 
+  - role: mother
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - address_line2
+        - contact_phone
+        - contact_email
+        - is_active
+        - operating_hours
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+
+  # CHWs can see all facilities including inactive ones
+  - role: chw
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - address_line2
+        - contact_phone
+        - contact_email
+        - is_active
+        - operating_hours
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+
+  # Clinicians can see all facilities with full details
+  - role: clinician
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - address_line2
+        - contact_phone
+        - contact_email
+        - is_active
+        - operating_hours
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+
+  # Admins can see all facility data
+  - role: admin
+    permission:
+      columns:
+        - id
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - address_line2
+        - contact_phone
+        - contact_email
+        - is_active
+        - operating_hours
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+
+# Update permissions - only staff at the facility and admins can update
+update_permissions:
+  # Clinicians can update contact information for their facility
+  - role: clinician
+    permission:
+      columns:
+        - contact_phone
+        - contact_email
+        - operating_hours
+      filter:
+        id:
+          _eq: X-Hasura-Facility-Id
+      check: null
+      
+  # Admins can update all facility data
+  - role: admin
+    permission:
+      columns:
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - address_line2
+        - contact_phone
+        - contact_email
+        - is_active
+        - operating_hours
+      filter: {}
+      check: null
+
+# Insert permissions - only admins can create facilities
+insert_permissions:
+  - role: admin
+    permission:
+      columns:
+        - name
+        - facility_type
+        - district
+        - location
+        - address_line1
+        - address_line2
+        - contact_phone
+        - contact_email
+        - is_active
+        - operating_hours
+      check:
+        name:
+          _ne: ""
+
+# Delete permissions - only admins can mark facilities as inactive
+delete_permissions:
+  - role: admin
+    permission:
+      filter: {}
+      backend_only: true

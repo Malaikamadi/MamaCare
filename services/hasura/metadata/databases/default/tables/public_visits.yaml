@@ -1,0 +1,530 @@
+table:
+  name: visits
+  schema: public
+
+select_permissions:
+  # Mothers can only see their own visits
+  - role: mother
+    permission:
+      columns:
+        - id
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - reminder_sent
+        - notes
+        - created_at
+        - updated_at
+      filter:
+        mother_id: X-Hasura-User-Id
+  
+  # CHWs can see visits for their assigned mothers
+  - role: chw
+    permission:
+      columns:
+        - id
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - reminder_sent
+        - notes
+        - created_at
+        - updated_at
+      filter:
+        mother: 
+          chw_id: X-Hasura-User-Id
+  
+  # Clinicians can see visits at their facility
+  - role: clinician
+    permission:
+      columns:
+        - id
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - reminder_sent
+        - notes
+        - created_at
+        - updated_at
+      filter:
+        facility_id: X-Hasura-Facility-Id
+  
+  # Admins can see all visits
+  - role: admin
+    permission:
+      columns:
+        - id
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - reminder_sent
+        - notes
+        - created_at
+        - updated_at
+      filter: {}
+
+insert_permissions:
+  # Mothers can request visits for themselves
+  - role: mother
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - notes
+      check:
+        mother_id: X-Hasura-User-Id
+  
+  # CHWs can schedule visits for their mothers
+  - role: chw
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - notes
+      check:
+        mother:
+          chw_id: X-Hasura-User-Id
+  
+  # Clinicians can schedule visits at their facility
+  - role: clinician
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - notes
+      check:
+        facility_id: X-Hasura-Facility-Id
+  
+  # Admins can schedule any visit
+  - role: admin
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - reminder_sent
+        - notes
+      check: {}
+
+update_permissions:
+  # Mothers can update only notes for their visits
+  - role: mother
+    permission:
+      columns:
+        - notes
+      filter:
+        mother_id: X-Hasura-User-Id
+      check: {}
+  
+  # CHWs can update visit status for their assigned mothers
+  - role: chw
+    permission:
+      columns:
+        - notes
+        - status
+        - reminder_sent
+      filter:
+        mother:
+          chw_id: X-Hasura-User-Id
+      check: {}
+  
+  # Clinicians can update all visits at their facility
+  - role: clinician
+    permission:
+      columns:
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - notes
+        - reminder_sent
+      filter:
+        facility_id: X-Hasura-Facility-Id
+      check: {}
+  
+  # Admins can update any visit
+  - role: admin
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - scheduled_time
+        - facility_id
+        - reminder_sent
+        - notes
+      filter: {}
+      check: {}
+
+delete_permissions:
+  # Only clinicians and admins can cancel/delete visits
+  - role: clinician
+    permission:
+      filter:
+        facility_id: X-Hasura-Facility-Id
+  
+  # Admins can delete any visit
+  - role: admin
+    permission:
+      filter: {}
+configuration:
+  column_config:
+    child_id:
+      custom_name: childId
+    completed_by_user_id:
+      custom_name: completedByUserId
+    completed_date:
+      custom_name: completedDate
+    created_at:
+      custom_name: createdAt
+    facility_id:
+      custom_name: facilityId
+    mother_id:
+      custom_name: motherId
+    reminder_sent:
+      custom_name: reminderSent
+    scheduled_date:
+      custom_name: scheduledDate
+    updated_at:
+      custom_name: updatedAt
+    visit_type:
+      custom_name: visitType
+  custom_column_names:
+    child_id: childId
+    completed_by_user_id: completedByUserId
+    completed_date: completedDate
+    created_at: createdAt
+    facility_id: facilityId
+    mother_id: motherId
+    reminder_sent: reminderSent
+    scheduled_date: scheduledDate
+    updated_at: updatedAt
+    visit_type: visitType
+  custom_name: Visit
+  custom_root_fields:
+    delete: deleteVisits
+    delete_by_pk: deleteVisit
+    insert: insertVisits
+    insert_one: insertVisit
+    select: visits
+    select_aggregate: visitsAggregate
+    select_by_pk: visitById
+    update: updateVisits
+    update_by_pk: updateVisit
+object_relationships:
+  - name: child
+    using:
+      foreign_key_constraint_on: child_id
+  - name: completedByUser
+    using:
+      foreign_key_constraint_on: completed_by_user_id
+  - name: facility
+    using:
+      foreign_key_constraint_on: facility_id
+  - name: mother
+    using:
+      foreign_key_constraint_on: mother_id
+
+# Role-based permissions for visits table
+# Following strict TypeScript-inspired principles with no implicit any, strict null checks
+
+# Select permissions - who can view visit data
+select_permissions:
+  # Mothers can see their own visits and their children's visits
+  - role: mother
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - facility_id
+        - reminder_sent
+        - completed_date
+        - completed_by_user_id
+        - notes
+      filter:
+        _or:
+          - mother_id:
+              _eq: X-Hasura-User-Id
+          - child:
+              mother_id:
+                _eq: X-Hasura-User-Id
+      allow_aggregations: false
+
+  # CHWs can see visits for mothers and children assigned to them
+  - role: chw
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - facility_id
+        - reminder_sent
+        - completed_date
+        - completed_by_user_id
+        - notes
+      filter:
+        _or:
+          - mother:
+              children:
+                chw_id:
+                  _eq: X-Hasura-User-Id
+          - child:
+              chw_id:
+                _eq: X-Hasura-User-Id
+          - completed_by_user_id:
+              _eq: X-Hasura-User-Id
+      allow_aggregations: true
+
+  # Clinicians can see visits at their facility
+  - role: clinician
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - facility_id
+        - reminder_sent
+        - completed_date
+        - completed_by_user_id
+        - notes
+      filter:
+        _or:
+          - facility_id:
+              _eq: X-Hasura-Facility-Id
+          - completed_by_user_id:
+              _eq: X-Hasura-User-Id
+      allow_aggregations: true
+
+  # Admins can see all visits
+  - role: admin
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - facility_id
+        - reminder_sent
+        - completed_date
+        - completed_by_user_id
+        - notes
+      filter: {}
+      allow_aggregations: true
+
+# Insert permissions - who can create visits
+insert_permissions:
+  # Mothers can schedule their own and their children's visits
+  - role: mother
+    permission:
+      columns:
+        - visit_type
+        - scheduled_date
+        - facility_id
+        - notes
+        - child_id
+      check:
+        _or:
+          - mother_id:
+              _eq: X-Hasura-User-Id
+          - child:
+              mother_id:
+                _eq: X-Hasura-User-Id
+      set:
+        mother_id: X-Hasura-User-Id
+        status: "SCHEDULED"
+        reminder_sent: false
+
+  # CHWs can schedule visits for assigned mothers and children
+  - role: chw
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - scheduled_date
+        - facility_id
+        - notes
+      check:
+        _or:
+          - mother:
+              children:
+                chw_id:
+                  _eq: X-Hasura-User-Id
+          - child:
+              chw_id:
+                _eq: X-Hasura-User-Id
+      set:
+        status: "SCHEDULED"
+        reminder_sent: false
+
+  # Clinicians can schedule any visit at their facility
+  - role: clinician
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - scheduled_date
+        - notes
+      check: {}
+      set:
+        facility_id: X-Hasura-Facility-Id
+        status: "SCHEDULED"
+        reminder_sent: false
+
+  # Admins can create any visit record
+  - role: admin
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - facility_id
+        - reminder_sent
+        - completed_date
+        - completed_by_user_id
+        - notes
+      check: {}
+
+# Update permissions - who can modify visits
+update_permissions:
+  # Mothers can reschedule or cancel their own appointments
+  - role: mother
+    permission:
+      columns:
+        - scheduled_date
+        - status
+        - notes
+      filter:
+        _and:
+          - _or:
+              - mother_id:
+                  _eq: X-Hasura-User-Id
+              - child:
+                  mother_id:
+                    _eq: X-Hasura-User-Id
+          - status:
+              _eq: "SCHEDULED"
+      check:
+        status:
+          _in: ["SCHEDULED", "CANCELED"]
+
+  # CHWs can update visit status and notes
+  - role: chw
+    permission:
+      columns:
+        - scheduled_date
+        - status
+        - notes
+        - reminder_sent
+      filter:
+        _or:
+          - mother:
+              children:
+                chw_id:
+                  _eq: X-Hasura-User-Id
+          - child:
+              chw_id:
+                _eq: X-Hasura-User-Id
+      check:
+        status:
+          _in: ["SCHEDULED", "CANCELED", "MISSED"]
+
+  # Clinicians can complete visits and add medical notes
+  - role: clinician
+    permission:
+      columns:
+        - status
+        - notes
+        - reminder_sent
+        - completed_date
+      filter:
+        facility_id:
+          _eq: X-Hasura-Facility-Id
+      check:
+        status:
+          _in: ["SCHEDULED", "COMPLETED", "MISSED", "CANCELED"]
+      set:
+        completed_by_user_id: X-Hasura-User-Id
+
+  # Admins can update all visit data
+  - role: admin
+    permission:
+      columns:
+        - mother_id
+        - child_id
+        - visit_type
+        - status
+        - scheduled_date
+        - facility_id
+        - reminder_sent
+        - completed_date
+        - completed_by_user_id
+        - notes
+      filter: {}
+      check: null
+
+# Delete permissions - only admins can delete visits
+delete_permissions:
+  - role: admin
+    permission:
+      filter: {}
+      backend_only: true

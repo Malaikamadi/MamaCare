@@ -1,0 +1,53 @@
+# MamaCare SL - Geospatial Configuration
+# Configures PostGIS and geography data handling
+
+# Global geospatial settings
+geospatial:
+  # Default SRID (Spatial Reference ID) - WGS84 coordinate system
+  default_srid: 4326
+  
+  # Enable GeoJSON format for geographic data
+  enable_geojson: true
+  
+  # Max distance for proximity search in meters (20km)
+  max_distance_meters: 20000
+  
+  # Enable geography casts for proper typing
+  enable_geography_casting: true
+
+# Table-specific geography column configurations
+geography_columns:
+  - table: healthcare_facilities
+    schema: public
+    column: location
+    indexed: true
+    index_type: gist
+  
+  - table: sos_events
+    schema: public
+    column: location
+    indexed: true
+    index_type: gist
+    enable_proximity_search: true
+
+# Proximity functions configuration
+proximity_functions:
+  - name: nearby_healthcare_facilities
+    description: "Find healthcare facilities near a given location"
+    table: healthcare_facilities
+    schema: public
+    geography_column: location
+    max_results: 10
+    max_distance_meters: 20000
+    order_by_distance: true
+  
+  - name: nearby_ambulances
+    description: "Find available ambulances near a given location"
+    table: ambulances
+    schema: public
+    join_table: healthcare_facilities
+    join_geography_column: location
+    filter: "ambulances.status = 'AVAILABLE'"
+    max_results: 5
+    max_distance_meters: 30000
+    order_by_distance: true

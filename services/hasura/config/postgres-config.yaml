@@ -1,0 +1,31 @@
+# PostgreSQL Configuration for MamaCare SL
+# These settings optimize the database for our specific workload
+
+# Connection Settings
+connection:
+  pool_settings:
+    max_connections: 100
+    idle_timeout: 180
+    connection_lifetime: 600
+    retries: 3
+  isolation_level: read-committed
+
+# Geospatial Optimizations
+geospatial:
+  srid: 4326  # WGS84 coordinate system
+  geojson_format: true
+  enable_postgis_raster: false  # No need for raster support in our application
+
+# Query Performance
+performance:
+  statement_timeout: 30000  # 30 seconds in milliseconds
+  enable_efficient_count: true
+  enable_query_caching: true
+  max_rows_returned: 10000
+
+# Security Settings
+security:
+  enable_row_level_security: true
+  enable_pg_crypto: true
+  restrict_schemas_to: ["public"]
+  admin_roles: ["hasura_admin"]

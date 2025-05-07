@@ -1,0 +1,82 @@
+# MamaCare SL GraphQL Schema Configuration
+# Defines global type handling and validation rules
+
+# Custom scalar handling and validation
+scalar_type_mappings:
+  # UUID scalar
+  UUID:
+    graphql_type: UUID
+    database_type: uuid
+    validation: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+  
+  # Geography handling
+  Geography:
+    graphql_type: Geography
+    database_type: geography
+    geojson_format: true
+  
+  # Date/time handling
+  Date:
+    graphql_type: Date
+    database_type: date
+    format: "YYYY-MM-DD"
+  
+  DateTime:
+    graphql_type: DateTime
+    database_type: timestamp with time zone
+    format: "YYYY-MM-DDTHH:mm:ssZ"
+  
+  Time:
+    graphql_type: Time
+    database_type: time
+    format: "HH:mm:ss"
+
+# Global type handling settings
+type_configuration:
+  # Enable strict type checking
+  strict_nullability: true
+  
+  # Validate enums against database values
+  validate_enums: true
+  
+  # Generate non-null constraints from database
+  derive_nullability_from_db: true
+  
+  # Use custom resolvers for complex types
+  custom_resolvers:
+    Geography:
+      resolver: "services/hasura/resolvers/geography.js"
+    
+    # Add more custom resolvers as needed
+
+# Type generation settings
+type_generation:
+  # Generate TypeScript types from schema
+  target_languages:
+    - language: typescript
+      output_dir: "../../mobile/src/types/generated"
+      nullable_handling: "undefined"
+      timestamp_handling: "Date"
+    
+    - language: go
+      output_dir: "../go/types"
+      nullable_handling: "pointer"
+      timestamp_handling: "time.Time"
+
+# Validation rules
+validation:
+  # Maximum nesting depth for queries
+  max_depth: 8
+  
+  # Rate limiting per client
+  rate_limit:
+    max_per_minute: 100
+    burst_size: 25
+  
+  # Field validation rules
+  field_validations:
+    - field_pattern: "email"
+      validation: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    
+    - field_pattern: "phone_number"
+      validation: "^\\+?[0-9]{10,15}$"
