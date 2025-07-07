@@ -1,0 +1,70 @@
+# MamaCare SL - Database Schema Validation Configuration
+# Ensures that schema changes are properly validated
+
+# Enable schema validation for tracked tables
+enable_schema_validation: true
+
+# Required tables for application functionality
+required_tables:
+  - name: users
+    description: Core user table for authentication and profile management
+    required_columns:
+      - id
+      - firebase_uid
+      - role
+      - created_at
+      - updated_at
+  
+  - name: healthcare_facilities
+    description: Tracks healthcare facilities across Sierra Leone
+    required_columns:
+      - id
+      - name
+      - location
+  
+  - name: children
+    description: Stores information about children in the system
+    required_columns:
+      - id
+      - mother_id
+      - date_of_birth
+  
+  - name: visits
+    description: Tracks scheduled and completed healthcare visits
+    required_columns:
+      - id
+      - visit_type
+      - status
+      - scheduled_date
+
+# Type validations
+type_validations:
+  - column_pattern: "_id$"
+    expected_type: "uuid"
+    
+  - column_pattern: "_at$"
+    expected_type: "timestamp with time zone"
+    
+  - column_pattern: "location$"
+    expected_type: "geography"
+    
+  - column_pattern: "^is_"
+    expected_type: "boolean"
+
+# Schema constraints
+enforce_constraints:
+  - check_primary_keys: true
+  - check_not_null_constraints: true
+  - check_foreign_keys: true
+  - check_unique_constraints: true
+
+# Extension requirements
+required_extensions:
+  - name: "uuid-ossp"
+    version: "1.1"
+    
+  - name: "postgis"
+    version: "3.1"
+    
+  - name: "pg_trgm"
+    version: "1.5"

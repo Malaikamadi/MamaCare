@@ -1,0 +1,28 @@
+{
+  "type": "RS256",
+  "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+  "audience": "mamacare-sl",
+  "issuer": "https://securetoken.google.com/mamacare-sl",
+  "claims_format": "json",
+  "claims_namespace": "https://hasura.io/jwt/claims",
+  "claims_namespace_path": "$.hasura.claims",
+  "claims_map": {
+    "x-hasura-allowed-roles": {
+      "path": "$.roles",
+      "default": ["user"]
+    },
+    "x-hasura-default-role": {
+      "path": "$.role",
+      "default": "user"
+    },
+    "x-hasura-user-id": {
+      "path": "$.user_id"
+    },
+    "x-hasura-facility-id": {
+      "path": "$.facility_id"
+    },
+    "x-hasura-district": {
+      "path": "$.district"
+    }
+  }
+}

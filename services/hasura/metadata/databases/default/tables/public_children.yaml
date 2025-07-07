@@ -1,0 +1,340 @@
+table:
+  name: children
+  schema: public
+configuration:
+  column_config:
+    birth_length_cm:
+      custom_name: birthLengthCm
+    birth_weight_grams:
+      custom_name: birthWeightGrams
+    chw_id:
+      custom_name: chwId
+    created_at:
+      custom_name: createdAt
+    first_name:
+      custom_name: firstName
+    hiv_status:
+      custom_name: hivStatus
+    last_name:
+      custom_name: lastName
+    mother_id:
+      custom_name: motherId
+    updated_at:
+      custom_name: updatedAt
+  custom_column_names:
+    birth_date: birthDate
+    birth_facility_id: birthFacilityId
+    birth_weight_grams: birthWeightGrams
+    chw_id: chwId
+    created_at: createdAt
+    first_name: firstName
+    hiv_status: hivStatus
+    last_name: lastName
+    mother_id: motherId
+    updated_at: updatedAt
+  custom_name: Child
+  custom_root_fields:
+    delete: deleteChildren
+    delete_by_pk: deleteChild
+    insert: insertChildren
+    insert_one: insertChild
+    select: children
+    select_aggregate: childrenAggregate
+    select_by_pk: childById
+    update: updateChildren
+    update_by_pk: updateChild
+object_relationships:
+  - name: birthFacility
+    using:
+      foreign_key_constraint_on: birth_facility_id
+  - name: chw
+    using:
+      foreign_key_constraint_on: chw_id
+  - name: mother
+    using:
+      foreign_key_constraint_on: mother_id
+array_relationships:
+          name: immunization_records
+          schema: public
+  - name: visits
+    using:
+      foreign_key_constraint_on:
+        column: child_id
+        table:
+          name: visits
+          schema: public
+
+# Role-based permissions for the children table
+# Following TypeScript principles: strict null checks, validation at boundaries
+
+# Select permissions - who can view child data
+select_permissions:
+  # Mothers can only see their own children
+  - role: mother
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - place_of_birth
+        - delivery_type
+        - gestational_age_weeks
+        - father_name
+        - blood_type
+        - mother_id
+        - chw_id
+        - current_growth_status
+      filter:
+        mother_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: false
+
+  # CHWs can see children assigned to them and all children of mothers they work with
+  - role: chw
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - place_of_birth
+        - delivery_type
+        - gestational_age_weeks
+        - father_name
+        - blood_type
+        - mother_id
+        - chw_id
+        - current_growth_status
+      filter:
+        _or:
+          - chw_id:
+              _eq: X-Hasura-User-Id
+          - mother:
+            children:
+              chw_id:
+                _eq: X-Hasura-User-Id
+      allow_aggregations: true
+
+  # Clinicians can see children at their facility
+  - role: clinician
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - place_of_birth
+        - delivery_type
+        - gestational_age_weeks
+        - father_name
+        - blood_type
+        - mother_id
+        - chw_id
+        - current_growth_status
+      filter:
+        _or:
+          - mother:
+              facility_id:
+                _eq: X-Hasura-Facility-Id
+          - visits:
+              facility_id:
+                _eq: X-Hasura-Facility-Id
+      allow_aggregations: true
+
+  # Admins can see all children
+  - role: admin
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - place_of_birth
+        - delivery_type
+        - gestational_age_weeks
+        - father_name
+        - blood_type
+        - mother_id
+        - chw_id
+        - current_growth_status
+      filter: {}
+      allow_aggregations: true
+
+# Update permissions - who can modify child data
+update_permissions:
+  # Mothers can update limited fields for their own children
+  - role: mother
+    permission:
+      columns:
+        - middle_name
+        - first_name
+        - last_name
+        - father_name
+      filter:
+        mother_id:
+          _eq: X-Hasura-User-Id
+      check: null
+
+  # CHWs can update health information for assigned children
+  - role: chw
+    permission:
+      columns:
+        - middle_name
+        - first_name
+        - last_name
+        - father_name
+        - current_growth_status
+      filter:
+        chw_id:
+          _eq: X-Hasura-User-Id
+      check: null
+
+  # Clinicians can update medical information
+  - role: clinician
+    permission:
+      columns:
+        - birth_weight_grams
+        - birth_length_cm
+        - gestational_age_weeks
+        - blood_type
+        - current_growth_status
+      filter:
+        _or:
+          - mother:
+              facility_id:
+                _eq: X-Hasura-Facility-Id
+          - visits:
+              facility_id:
+                _eq: X-Hasura-Facility-Id
+      check: null
+
+  # Admins can update all fields
+  - role: admin
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - place_of_birth
+        - delivery_type
+        - gestational_age_weeks
+        - father_name
+        - blood_type
+        - mother_id
+        - chw_id
+        - current_growth_status
+      filter: {}
+      check: null
+
+# Insert permissions - who can create children records
+insert_permissions:
+  # Mothers can register their own children
+  - role: mother
+    permission:
+      columns:
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - father_name
+      check:
+        mother_id:
+          _eq: X-Hasura-User-Id
+      set:
+        mother_id: X-Hasura-User-Id
+
+  # CHWs can register children for their assigned mothers
+  - role: chw
+    permission:
+      columns:
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - father_name
+        - mother_id
+      check:
+        mother:
+          children:
+            chw_id:
+              _eq: X-Hasura-User-Id
+      set:
+        chw_id: X-Hasura-User-Id
+
+  # Clinicians can register children with full medical details
+  - role: clinician
+    permission:
+      columns:
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - place_of_birth
+        - delivery_type
+        - gestational_age_weeks
+        - father_name
+        - blood_type
+        - mother_id
+      check:
+        mother:
+          facility_id:
+            _eq: X-Hasura-Facility-Id
+
+  # Admins can create any children records
+  - role: admin
+    permission:
+      columns:
+        - id
+        - first_name
+        - middle_name
+        - last_name
+        - date_of_birth
+        - birth_weight_grams
+        - birth_length_cm
+        - place_of_birth
+        - delivery_type
+        - gestational_age_weeks
+        - father_name
+        - blood_type
+        - mother_id
+        - chw_id
+        - current_growth_status
+      check: {}
+
+# Delete permissions - only admins can delete
+delete_permissions:
+  - role: admin
+    permission:
+      filter: {}
+      backend_only: true

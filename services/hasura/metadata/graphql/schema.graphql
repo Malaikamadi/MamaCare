@@ -1,0 +1,124 @@
+"""
+MamaCare SL GraphQL Schema
+Contains custom scalar and type definitions for strong typing
+"""
+
+# Custom scalar for UUID values
+scalar UUID
+
+# Custom scalar for Geography data
+scalar Geography
+
+# Custom scalars for precise date handling
+scalar Date
+scalar DateTime
+scalar Time
+
+# User role enumeration
+enum UserRole {
+  MOTHER
+  CHW
+  CLINICIAN
+  ADMIN
+}
+
+# Risk level enumeration
+enum RiskLevel {
+  GREEN
+  YELLOW
+  RED
+}
+
+# Visit type enumeration
+enum VisitType {
+  ANTENATAL
+  POSTNATAL
+  VACCINATION
+  CHECKUP
+  EMERGENCY
+}
+
+# Visit status enumeration
+enum VisitStatus {
+  SCHEDULED
+  COMPLETED
+  MISSED
+  CANCELED
+}
+
+# Device platform enumeration
+enum DevicePlatform {
+  ANDROID
+  IOS
+  WEB
+}
+
+# Growth status enumeration
+enum GrowthStatus {
+  NORMAL
+  UNDERWEIGHT
+  OVERWEIGHT
+  STUNTED
+  WASTED
+}
+
+# Delivery type enumeration
+enum DeliveryType {
+  VAGINAL
+  C_SECTION
+  ASSISTED
+}
+
+# Emergency type enumeration
+enum EmergencyType {
+  MEDICAL
+  TRANSPORT
+  LABOR
+  OTHER
+}
+
+# Child info input type for creating children
+input ChildInput {
+  first_name: String!
+  middle_name: String
+  last_name: String!
+  date_of_birth: Date!
+  birth_weight_grams: Int
+  birth_length_cm: Int
+  place_of_birth: String
+  delivery_type: DeliveryType
+  gestational_age_weeks: Int
+  mother_id: UUID!
+  father_name: String
+  blood_type: String
+  current_growth_status: GrowthStatus
+}
+
+# Location input type for geography data
+input LocationInput {
+  latitude: Float!
+  longitude: Float!
+  address: String
+  description: String
+}
+
+# Visit input for scheduling visits
+input VisitInput {
+  mother_id: UUID
+  child_id: UUID
+  visit_type: VisitType!
+  scheduled_date: DateTime!
+  facility_id: UUID!
+  notes: String
+}
+
+# Emergency request input
+input EmergencyInput {
+  user_id: UUID!
+  emergency_type: EmergencyType!
+  description: String!
+  for_self: Boolean!
+  location: LocationInput!
+  location_address: String
+  location_description: String
+}

@@ -1,0 +1,30 @@
+# Authentication Service Configuration
+
+# Server configuration
+server:
+  address: ":8080"
+  read_timeout: 5s
+  write_timeout: 10s
+  idle_timeout: 120s
+  shutdown_timeout: 10s
+
+# Database configuration
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres  # Use env var in production
+  name: mamacare
+  sslmode: disable    # Use 'require' in production
+
+# Authentication configuration
+auth:
+  # JWT configuration
+  jwt_secret: "your-secret-key-replace-in-prod"  # Use env var in production
+  jwt_expiry: 24h
+  hasura_namespace: "https://hasura.io/jwt/claims"
+
+# Firebase configuration
+firebase:
+  credentials_file: "./firebase-credentials.json"  # Path to your Firebase credentials file
+  project_id: "mamacare-app"  # Your Firebase project ID
