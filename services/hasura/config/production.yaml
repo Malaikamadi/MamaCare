@@ -1,8 +1,0 @@
-version: 3
-endpoint: https://hasura.mamacare.sl
-admin_secret: ${HASURA_GRAPHQL_ADMIN_SECRET}
-metadata_directory: metadata
-migrations_directory: migrations
-seeds_directory: seeds
-apply_migrations: false  # Manual verification required before migrations in production
-apply_metadata: false    # Manual verification required before metadata changes in production

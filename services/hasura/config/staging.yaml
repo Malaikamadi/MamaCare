@@ -1,8 +1,0 @@
-version: 3
-endpoint: https://staging-hasura.mamacare.sl
-admin_secret: ${HASURA_GRAPHQL_ADMIN_SECRET}
-metadata_directory: metadata
-migrations_directory: migrations
-seeds_directory: seeds
-apply_migrations: true
-apply_metadata: true
